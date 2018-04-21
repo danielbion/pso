@@ -61,11 +61,11 @@ pso = function(config){
 	for(it in 1:config$iterations){
 		pos = c()		
 		for(i in 1:length(particles)){
-			particles[[i]] = updatePos(particles[[i]])
-			gbest = calculateBest(particles);
-			pos = rbind(pos, cbind(particles[[i]]$pos[1], particles[[i]]$pos[2]))
-			cost = c(cost,gbest$val)
+			particles[[i]] = updatePos(particles[[i]])			
 		}
+		gbest = calculateBest(particles);
+		pos = rbind(pos, cbind(particles[[i]]$pos[1], particles[[i]]$pos[2]))
+		cost = c(cost,gbest$val)
 		# plot das particulas
 		# plot(pos, ylim=c(config$lower,config$upper), xlim=c(config$lower,config$upper))
 	}
