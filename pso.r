@@ -19,7 +19,7 @@ calculateBest = function(particles) {
 	return(best)
 }
 
-updatePos = function(particle){
+updatePos = function(particle, gbest){
 	personal = config$c1 * runif(1) * (particle$best$pos - particle$pos)
 	social = config$c2 * runif(1) * (gbest$pos - particle$pos)
 	
@@ -28,8 +28,10 @@ updatePos = function(particle){
 	particle$vel = apply(as.matrix(particle$vel), 1, function(x){max(x,-config$max_vel)})
 	
 	particle$pos = particle$pos + particle$vel	
-	particle$pos = apply(as.matrix(particle$pos), 1, function(x){min(x,config$upper)})
-	particle$pos = apply(as.matrix(particle$pos), 1, function(x){max(x,config$lower)})
+	for(i in 1:config$dim){
+		particle$pos[i] = min(particle$pos[i], config$upper[i])
+		particle$pos[i] = max(particle$pos[i], config$lower[i])
+	}
 	
 	val = config$fun(particle$pos);
 	if(val < particle$best$val){
@@ -50,7 +52,10 @@ pso = function(config){
 	iteration = 0
 	
 	for(i in 1:config$swarm_size){
-		pos = runif(config$dim) * (config$upper - config$lower) + config$lower
+		pos = c()
+		for(i in 1:config$dim){
+			pos[i] = runif(1) * (config$upper[i] - config$lower[i]) + config$lower[i] 
+		}
 		vel = rep(0, config$dim)
 		particles = push(particles, newParticle(pos, vel, config$fun))
 	}
@@ -59,15 +64,11 @@ pso = function(config){
 	
 	cost = c()
 	for(it in 1:config$iterations){
-		pos = c()		
 		for(i in 1:length(particles)){
-			particles[[i]] = updatePos(particles[[i]])			
+			particles[[i]] = updatePos(particles[[i]], gbest)			
 		}
-		gbest = calculateBest(particles);
-		pos = rbind(pos, cbind(particles[[i]]$pos[1], particles[[i]]$pos[2]))
+		gbest = calculateBest(particles)
 		cost = c(cost,gbest$val)
-		# plot das particulas
-		# plot(pos, ylim=c(config$lower,config$upper), xlim=c(config$lower,config$upper))
 	}
 	plot(cost, type = "s")
 	return (gbest)
@@ -76,8 +77,8 @@ pso = function(config){
 
 config = c()
 config$dim = 2
-config$upper = 100
-config$lower = -100
+config$lower = c(-100, -100)
+config$upper = c(100, 100)
 #config$fun = function(x){return(sum(x ^ 2))}
 config$fun = function(x){
 	return(20 + (x[1] ^ 2) - cos(10 * pi * x[1]) + (x[2]^2) + (10*cos(2 * pi * x[2])))
