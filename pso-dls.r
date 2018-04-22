@@ -4,6 +4,7 @@ newParticle = function(pos, vel, swarm, fitFun) {
 		vel = vel,
 		best = list(
 			pos = pos,
+			type = 1,
 			val = fitFun(pos)
 		),
 		type = 1,
@@ -13,6 +14,7 @@ newParticle = function(pos, vel, swarm, fitFun) {
 
 calculateBest = function(particles) {
 	globalBest = particles[[1]]$best
+	globalBest$val = 100000
 	localBest = list()
 	for(i in 1:config$sub_swarms){
 		localBest[[i]] = globalBest
@@ -47,9 +49,11 @@ updatePos = function(particle, p, lbest, unitedLbest){
 	chance = runif(1)
 	if(chance <= p){
 		particle$type = 2
+		particle$best$type = 2
 		social = config$c2 * runif(1) * (unitedLbest$pos - particle$pos)
 	}else {
 		particle$type = 1
+		particle$best$type = 1
 		social = config$c2 * runif(1) * (lbest[[particle$swarm]]$pos - particle$pos)
 	}
 
@@ -58,9 +62,11 @@ updatePos = function(particle, p, lbest, unitedLbest){
 	particle$vel = apply(as.matrix(particle$vel), 1, function(x){max(x,-config$max_vel)})
 	
 	particle$pos = particle$pos + particle$vel	
-	particle$pos = apply(as.matrix(particle$pos), 1, function(x){min(x,config$upper)})
-	particle$pos = apply(as.matrix(particle$pos), 1, function(x){max(x,config$lower)})
 	
+	for(i in 1:config$dim){
+		particle$pos[i] = min(particle$pos[i], config$upper[i])
+		particle$pos[i] = max(particle$pos[i], config$lower[i])
+	}
 	val = config$fun(particle$pos);
 	if(val < particle$best$val){
 		particle$best$pos = particle$pos
@@ -86,7 +92,10 @@ pso = function(config){
 	# Init particles with random position and velocity
 	for(swarmIndex in 1:config$sub_swarms){
 		for(j in 1:config$swarm_size){
-			pos = runif(config$dim) * (config$limits[[swarmIndex]][2] - config$limits[[swarmIndex]][1]) + config$limits[[swarmIndex]][1]
+			pos = c()
+			for(i in 1:config$dim){
+				pos[i] = runif(1) * (config$limitUpper[[swarmIndex]][i] - config$limitLower[[swarmIndex]][i]) + config$limitLower[[swarmIndex]][i] 
+			}
 			vel = rep(0, config$dim)
 			particles = push(particles, newParticle(pos, vel, swarmIndex, config$fun))
 		}
@@ -106,14 +115,14 @@ pso = function(config){
 		if(savePng()){
 			name = paste(config$savePngPath, "pso-dls-", it, ".png", sep="")
 			png(filename=name)
-			plot("", ylim=c(config$lower,config$upper), xlim=c(config$lower,config$upper))
+			plot("", ylim=c(config$lower[2],config$upper[2]), xlim=c(config$lower[1],config$upper[2]))
 		}
 		
 		# Update particle positions
 		for(i in 1:length(particles)){
 			particles[[i]] = updatePos(particles[[i]], p, lbest, unitedLbest)	
 			if(savePng()){
-				points(particles[[i]]$pos[1], particles[[i]]$pos[2], ylim=c(config$lower,config$upper), xlim=c(config$lower,config$upper), col = c("green", "red", "blue", "cyan")[particles[[i]]$swarm], pch=c(1,8)[particles[[i]]$type])
+				points(particles[[i]]$pos[1], particles[[i]]$pos[2], ylim=c(config$lower[2],config$upper[2]), xlim=c(config$lower[1],config$upper[1]), col = c("green", "red", "blue", "cyan")[particles[[i]]$swarm], pch=c(1,4)[particles[[i]]$type])
 			}
 		}	
 		
@@ -125,9 +134,9 @@ pso = function(config){
 		
 		if(savePng()){
 			for(i in 1:config$sub_swarms){
-				points(lbest[[i]]$pos[1], lbest[[i]]$pos[2], ylim=c(config$lower,config$upper), xlim=c(config$lower,config$upper), lwd = 3, col= c("green", "red", "blue", "cyan")[i], pch=25)
+				points(lbest[[i]]$pos[1], lbest[[i]]$pos[2], ylim=c(config$lower[2],config$upper[2]), xlim=c(config$lower[1],config$upper[1]), cex = 2, lwd = 2, col= c("green", "red", "blue", "cyan")[i], pch=c(1,4)[lbest[[i]]$type])
 			}
-			points(unitedLbest$pos[1], unitedLbest$pos[2], ylim=c(config$lower,config$upper), xlim=c(config$lower,config$upper), lwd = 3, col="orange", pch=23)
+			points(unitedLbest$pos[1], unitedLbest$pos[2], ylim=c(config$lower[2],config$upper[2]), xlim=c(config$lower[1],config$upper[1]), lwd = 3, col="orange", pch=23)
 			dev.off()
 		}
 		
@@ -146,8 +155,8 @@ pso = function(config){
 
 config = c()
 config$dim = 2
-config$lower = -100
-config$upper = 100
+config$lower = c(-100, -100)
+config$upper = c(100, 100)
 
 #config$fun = function(x){return(sum(x ^ 2))}
 config$fun = function(x){
@@ -161,10 +170,10 @@ config$inertia = 0.9
 config$iterations = 100
 
 config$sub_swarms = 4
-#config$limits = list(c(-100, -50), c(-50, 0), c(0, 50), c(50, 100))
-config$limits = list(c(-100, 100), c(-100, 100), c(-100, 100), c(-100, 100))
+config$limitLower = list(c(-50, -50), c(0, 20), c(50, -100), c(50, 50))
+config$limitUpper = list(c(0, 0), c(50, 100), c(100, -50), c(100, 100))
 
-config$savePng = TRUE
+config$savePng = FALSE
 config$savePngPath = "C:/Projects/pso/pso/plot/"
 
 pso(config)
