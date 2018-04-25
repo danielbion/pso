@@ -1,91 +1,93 @@
-newParticle = function(pos, vel, swarm, fitFun) {
-	return (list(
-		pos = pos,
-		vel = vel,
-		best = list(
+PSO_DLS = function(config){
+
+	newParticle = function(pos, vel, swarm, fitFun) {
+		return (list(
 			pos = pos,
+			vel = vel,
+			best = list(
+				pos = pos,
+				type = 1,
+				val = fitFun(pos)
+			),
 			type = 1,
-			val = fitFun(pos)
-		),
-		type = 1,
-		swarm = swarm
-	))
-}
-
-calculateBest = function(particles) {
-	globalBest = particles[[1]]$best
-	globalBest$val = 100000
-	localBest = list()
-	for(i in 1:config$sub_swarms){
-		localBest[[i]] = globalBest
+			swarm = swarm
+		))
 	}
-	
-	for(i in 1:length(particles)){
-		swarm = particles[[i]]$swarm
-		if(particles[[i]]$best$val < localBest[[swarm]]$val){
-			localBest[[swarm]] = particles[[i]]$best
+
+	calculateBest = function(particles) {
+		globalBest = particles[[1]]$best
+		globalBest$val = 100000
+		localBest = list()
+		for(i in 1:config$sub_swarms){
+			localBest[[i]] = globalBest
 		}
-		if(particles[[i]]$best$val < globalBest$val){
-			globalBest = particles[[i]]$best
+		
+		for(i in 1:length(particles)){
+			swarm = particles[[i]]$swarm
+			if(particles[[i]]$best$val < localBest[[swarm]]$val){
+				localBest[[swarm]] = particles[[i]]$best
+			}
+			if(particles[[i]]$best$val < globalBest$val){
+				globalBest = particles[[i]]$best
+			}
 		}
-	}
-	
-	pos = c()
-	for(i in 1:length(localBest)){
-		pos = rbind(pos, localBest[[i]]$pos)
-	}
-	pos = colMeans(as.matrix(pos))
-	unitedLocalbest = globalBest
-	unitedLocalbest$pos = pos
-	unitedLocalbest$val = config$fun(pos);
-	
-	best = list(globalBest, localBest, unitedLocalbest)
-	return(best)
-}
-
-updatePos = function(particle, p, lbest, unitedLbest){
-	personal = config$c1 * runif(1) * (particle$best$pos - particle$pos)
-	
-	chance = runif(1)
-	if(chance <= p){
-		particle$type = 2
-		particle$best$type = 2
-		social = config$c2 * runif(1) * (unitedLbest$pos - particle$pos)
-	}else {
-		particle$type = 1
-		particle$best$type = 1
-		social = config$c2 * runif(1) * (lbest[[particle$swarm]]$pos - particle$pos)
+		
+		pos = c()
+		for(i in 1:length(localBest)){
+			pos = rbind(pos, localBest[[i]]$pos)
+		}
+		pos = colMeans(as.matrix(pos))
+		unitedLocalbest = globalBest
+		unitedLocalbest$pos = pos
+		unitedLocalbest$val = config$fun(pos);
+		
+		best = list(globalBest, localBest, unitedLocalbest)
+		return(best)
 	}
 
-	particle$vel = (config$inertia * particle$vel) + personal + social	
-	particle$vel = apply(as.matrix(particle$vel), 1, function(x){min(x,config$max_vel)})
-	particle$vel = apply(as.matrix(particle$vel), 1, function(x){max(x,-config$max_vel)})
-	
-	particle$pos = particle$pos + particle$vel	
-	
-	for(i in 1:config$dim){
-		particle$pos[i] = min(particle$pos[i], config$upper[i])
-		particle$pos[i] = max(particle$pos[i], config$lower[i])
+	updatePos = function(particle, p, lbest, unitedLbest){
+		personal = config$c1 * runif(1) * (particle$best$pos - particle$pos)
+		
+		chance = runif(1)
+		if(chance <= p){
+			particle$type = 2
+			particle$best$type = 2
+			social = config$c2 * runif(1) * (unitedLbest$pos - particle$pos)
+		}else {
+			particle$type = 1
+			particle$best$type = 1
+			social = config$c2 * runif(1) * (lbest[[particle$swarm]]$pos - particle$pos)
+		}
+
+		particle$vel = (config$inertia * particle$vel) + personal + social	
+		particle$vel = apply(as.matrix(particle$vel), 1, function(x){min(x,config$max_vel)})
+		particle$vel = apply(as.matrix(particle$vel), 1, function(x){max(x,-config$max_vel)})
+		
+		particle$pos = particle$pos + particle$vel	
+		
+		for(i in 1:config$dim){
+			particle$pos[i] = min(particle$pos[i], config$upper[i])
+			particle$pos[i] = max(particle$pos[i], config$lower[i])
+		}
+		val = config$fun(particle$pos);
+		if(val < particle$best$val){
+			particle$best$pos = particle$pos
+			particle$best$val = val
+		}
+		return (particle)
 	}
-	val = config$fun(particle$pos);
-	if(val < particle$best$val){
-		particle$best$pos = particle$pos
-		particle$best$val = val
+
+	push = function(arr, element){
+		len = length(arr)
+		arr[[len + 1]] = element
+		return(arr)
 	}
-	return (particle)
-}
 
-push = function(arr, element){
-	len = length(arr)
-	arr[[len + 1]] = element
-	return(arr)
-}
+	savePng = function(){
+		return (config$savePng && config$dim == 2)
+	}
 
-savePng = function(){
-	return (config$savePng && config$dim == 2)
-}
-
-pso = function(config){
+	# Main loop
 	particles = list()
 	p = 0
 	
@@ -175,4 +177,4 @@ config$limitUpper = list(c(0, 0), c(50, 100), c(100, -50), c(100, 100))
 config$savePng = TRUE
 config$savePngPath = "C:/Projects/pso/pso/plot/"
 
-pso(config)
+PSO_DLS(config)
