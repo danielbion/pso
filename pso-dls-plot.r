@@ -115,6 +115,7 @@ PSO_DLS = function(config){
 		p = it / config$iterations
 		
 		if(savePng()){
+			dir.create("plot", showWarnings = FALSE)
 			name = paste(config$savePngPath, "pso-dls-", it, ".png", sep="")
 			png(filename=name)
 			plot("", ylim=c(config$lower[2],config$upper[2]), xlim=c(config$lower[1],config$upper[2]))

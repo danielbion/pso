@@ -4,25 +4,10 @@ source("pso.r")
 source("pso-dls.r")
 source("functions.r")
 
-cfg = c()
-cfg$dim = 10
-cfg$lower = -100
-cfg$upper = 100
-cfg$swarm_size = 20
-cfg$c1 = 2.05
-cfg$c2 = 2.05
-cfg$max_vel = 2
-cfg$inertia = 0.9
-cfg$iterations = 500
-
-cfg$sub_swarms = 4
-
-functions = c("twopeaks_func", "fiveuneven_func")
-monteCarlo = 30
-
 test = function(method, cfg, functions, monteCarlo){
 	results = list()
 	for(i in 1:length(functions)){	
+		print(paste("Function ", i))
 		result = c()
 		
 		# Choose the Fitness Function
@@ -32,6 +17,7 @@ test = function(method, cfg, functions, monteCarlo){
 		result$pso_gbest = c()
 		
 		for(j in 1:monteCarlo){
+			print(paste("MC iteration ", j))
 			retorno = method(cfg)
 			
 			# Store best fit for each MC iteration
@@ -49,5 +35,53 @@ test = function(method, cfg, functions, monteCarlo){
 	return (results)
 }
 
+cfg = c()
+cfg$dim = 2
+cfg$lower = -100
+cfg$upper = 100
+cfg$swarm_size = 40
+cfg$c1 = 1.49445
+cfg$c2 = 1.49445
+cfg$max_vel = 100
+cfg$inertia = 0.9
+cfg$iterations = 100
+
+# Listing the functions to test
+functions = c("twopeaks_func", "fiveuneven_func")
+
+# Setup MC experiments
+monteCarlo = 30
+dir.create("results", showWarnings = FALSE)
+
+# Test standard PSO
 PSO_result = test(PSO, cfg, functions, monteCarlo)
+# Save the results for PSO, use: PSO_result = readRDS("results/pso.rds") to read later
+saveRDS(PSO_result, "results/pso.rds")
+
+# Test PSO DLS
+cfg$swarm_size = 10
+cfg$sub_swarms = 4
 PSO_DLS_result = test(PSO_DLS, cfg, functions, monteCarlo)
+# Save the results for PSO-DLS, use: PSO_DLS_result = readRDS("results/pso-dls.rds") to read later
+saveRDS(PSO_DLS_result, "results/pso-dls.rds") 
+
+
+# Save the cost history (convergence) for each function
+for(i in 1:length(functions)){	
+	minY = min(min(PSO_result[[i]]$pso_mean_cost), min(PSO_DLS_result[[i]]$pso_mean_cost))
+	maxY = max(max(PSO_result[[i]]$pso_mean_cost), max(PSO_DLS_result[[i]]$pso_mean_cost))
+		
+	name = paste("results/function-", i,".png", sep="")
+	png(filename=name)
+	plot("", ylim = c(minY, maxY), xlim = c(0, cfg$iterations),xlab="Iteration",ylab="")
+	legend("topright", legend = c("PSO", "PSO-DLS"), fill=c("blue", "red"), bty="n")
+	lines(PSO_result[[i]]$pso_mean_cost, col = "blue", lwd = 2)
+	lines(PSO_DLS_result[[i]]$pso_mean_cost, col = "red", lwd = 2)
+	dev.off()
+}
+
+for(i in 1:length(functions)){
+	pso = PSO_result[[i]]$pso_gbest
+	pso_dls = PSO_DLS_result[[i]]$pso_gbest
+	wilcox.test(pso, pso_dls, paired = TRUE, alternative = "greater", conf.level = 0.95)
+}

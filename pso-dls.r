@@ -92,7 +92,7 @@ PSO_DLS = function(config){
 		for(j in 1:config$swarm_size){
 			pos = c()
 			for(i in 1:config$dim){
-				pos[i] = runif(1) * (config$lower - config$upper) + config$lower
+				pos[i] = runif(1) * (config$upper - config$lower) + config$lower
 			}
 			vel = rep(0, config$dim)
 			particles = push(particles, newParticle(pos, vel, swarmIndex, config$fun))
