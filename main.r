@@ -102,6 +102,6 @@ for(i in 1:length(functions)){
 	functionsResult[[i]]$pso = getMetrics(pso)
 	functionsResult[[i]]$pso_dls = getMetrics(pso_dls)
 	
-	saveRDS(functionsResult, "results/tests.rds") 
+	saveRDS(functionsResult, "results/results.rds") 
 }
 
