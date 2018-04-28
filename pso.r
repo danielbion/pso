@@ -51,7 +51,6 @@ PSO = function(config){
 
 	#Main loop
 	particles = list()
-	iteration = 0
 	
 	for(i in 1:config$swarm_size){
 		pos = c()

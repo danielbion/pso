@@ -96,7 +96,7 @@ PSO_DLS = function(config){
 		for(j in 1:config$swarm_size){
 			pos = c()
 			for(i in 1:config$dim){
-				pos[i] = runif(1) * (config$limitUpper[[swarmIndex]][i] - config$limitLower[[swarmIndex]][i]) + config$limitLower[[swarmIndex]][i] 
+				pos[i] = runif(1) * (config$limitUpper - config$limitLower) + config$limitLower
 			}
 			vel = rep(0, config$dim)
 			particles = push(particles, newParticle(pos, vel, swarmIndex, config$fun))
@@ -155,25 +155,30 @@ PSO_DLS = function(config){
 	return (gbest)
 }
 
+source("functions.r")
 
 config = c()
 config$dim = 2
 config$lower = c(-100, -100)
 config$upper = c(100, 100)
 
-config$fun = function(x){
-	return(20 + (x[1] ^ 2) - cos(10 * pi * x[1]) + (x[2]^2) + (10*cos(2 * pi * x[2])))
-}
-config$swarm_size = 10
-config$c1 = 2.05
-config$c2 = 2.05
-config$max_vel = 1
+# config$fun = function(x){
+	# return(20 + (x[1] ^ 2) - cos(10 * pi * x[1]) + (x[2]^2) + (10*cos(2 * pi * x[2])))
+# }
+config$fun = twopeaks_func
+config$swarm_size = 4
+config$c1 = 1.49445
+config$c2 = 1.49445
+config$max_vel = 2
 config$inertia = 0.9
-config$iterations = 100
+config$iterations = 2500
 
-config$sub_swarms = 4
-config$limitLower = list(c(-50, -50), c(0, 20), c(50, -100), c(50, 50))
-config$limitUpper = list(c(0, 0), c(50, 100), c(100, -50), c(100, 100))
+config$sub_swarms = 10
+# config$limitLower = list(c(-50, -50), c(0, 20), c(50, -100), c(50, 50))
+# config$limitUpper = list(c(0, 0), c(50, 100), c(100, -50), c(100, 100))
+config$limitLower = -100
+config$limitUpper = 100
+
 
 config$savePng = TRUE
 config$savePngPath = "C:/Projects/pso/pso/plot/"

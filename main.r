@@ -36,7 +36,7 @@ test = function(method, cfg, functions, monteCarlo){
 }
 
 cfg = c()
-cfg$dim = 2
+cfg$dim = 10
 cfg$lower = -100
 cfg$upper = 100
 cfg$swarm_size = 40
@@ -44,7 +44,7 @@ cfg$c1 = 1.49445
 cfg$c2 = 1.49445
 cfg$max_vel = 100
 cfg$inertia = 0.9
-cfg$iterations = 100
+cfg$iterations = 2500
 
 # Listing the functions to test
 functions = c("twopeaks_func", "fiveuneven_func")
@@ -59,8 +59,8 @@ PSO_result = test(PSO, cfg, functions, monteCarlo)
 saveRDS(PSO_result, "results/pso.rds")
 
 # Test PSO DLS
-cfg$swarm_size = 10
-cfg$sub_swarms = 4
+cfg$swarm_size = 4
+cfg$sub_swarms = 10
 PSO_DLS_result = test(PSO_DLS, cfg, functions, monteCarlo)
 # Save the results for PSO-DLS, use: PSO_DLS_result = readRDS("results/pso-dls.rds") to read later
 saveRDS(PSO_DLS_result, "results/pso-dls.rds") 
@@ -75,13 +75,33 @@ for(i in 1:length(functions)){
 	png(filename=name)
 	plot("", ylim = c(minY, maxY), xlim = c(0, cfg$iterations),xlab="Iteration",ylab="")
 	legend("topright", legend = c("PSO", "PSO-DLS"), fill=c("blue", "red"), bty="n")
-	lines(PSO_result[[i]]$pso_mean_cost, col = "blue", lwd = 2)
-	lines(PSO_DLS_result[[i]]$pso_mean_cost, col = "red", lwd = 2)
+	lines(PSO_result[[i]]$pso_mean_cost, col = "blue")
+	lines(PSO_DLS_result[[i]]$pso_mean_cost, col = "red")
 	dev.off()
 }
+
+
+getMetrics = function(vec){
+	return (list(
+		min = min(vec),
+		max = max(vec),
+		mean = mean(vec),
+		median = median(vec),
+		sd = sd(vec)
+	))
+}
+
+functionsResult = list()
 
 for(i in 1:length(functions)){
 	pso = PSO_result[[i]]$pso_gbest
 	pso_dls = PSO_DLS_result[[i]]$pso_gbest
-	wilcox.test(pso, pso_dls, paired = TRUE, alternative = "greater", conf.level = 0.95)
+	
+	functionsResult[[i]] = list()
+	functionsResult[[i]]$tests = wilcox.test(pso_dls, pso, paired = TRUE, alternative = "less", conf.level = 0.95)
+	functionsResult[[i]]$pso = getMetrics(pso)
+	functionsResult[[i]]$pso_dls = getMetrics(pso_dls)
+	
+	saveRDS(functionsResult, "results/tests.rds") 
 }
+
