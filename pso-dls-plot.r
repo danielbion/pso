@@ -166,14 +166,14 @@ config$upper = c(100, 100)
 	# return(20 + (x[1] ^ 2) - cos(10 * pi * x[1]) + (x[2]^2) + (10*cos(2 * pi * x[2])))
 # }
 config$fun = twopeaks_func
-config$swarm_size = 4
+config$swarm_size = 10
 config$c1 = 1.49445
 config$c2 = 1.49445
 config$max_vel = 2
 config$inertia = 0.9
-config$iterations = 2500
+config$iterations = 500
 
-config$sub_swarms = 10
+config$sub_swarms = 3
 # config$limitLower = list(c(-50, -50), c(0, 20), c(50, -100), c(50, 50))
 # config$limitUpper = list(c(0, 0), c(50, 100), c(100, -50), c(100, 100))
 config$limitLower = -100
