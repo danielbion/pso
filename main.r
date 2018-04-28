@@ -104,4 +104,5 @@ for(i in 1:length(functions)){
 	
 	saveRDS(functionsResult, "results/results.rds") 
 }
+# use: functionsResult = readRDS("results/results.rds") to read later
 
