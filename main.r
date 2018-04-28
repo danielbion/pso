@@ -7,7 +7,7 @@ source("functions.r")
 test = function(method, cfg, functions, monteCarlo){
 	results = list()
 	for(i in 1:length(functions)){	
-		print(paste("Function ", i))
+		print(paste("Function ", i, " :", functions[i]))
 		result = c()
 		
 		# Choose the Fitness Function
@@ -17,7 +17,7 @@ test = function(method, cfg, functions, monteCarlo){
 		result$pso_gbest = c()
 		
 		for(j in 1:monteCarlo){
-			print(paste("MC iteration ", j))
+			print(paste("MC step: ", j))
 			retorno = method(cfg)
 			
 			# Store best fit for each MC iteration
@@ -47,7 +47,7 @@ cfg$inertia = 0.9
 cfg$iterations = 2500
 
 # Listing the functions to test
-functions = c("twopeaks_func", "fiveuneven_func")
+functions = c("twopeaks_func", "fiveuneven_func", "equalmin_func", "decreasemin_func", "unevenmin_func", "himmelblau_func", "camelback_func", "vincent_func", "cf01", "cf02", "cf03", "cf04", "cf05", "cf06", "cf07")
 
 # Setup MC experiments
 monteCarlo = 30
