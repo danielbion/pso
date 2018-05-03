@@ -88,6 +88,10 @@ PSO_DLS = function(config){
 	}
 
 	# Main loop
+	colors = c("gray0", "deeppink4", "green", 
+	"red", "darkblue", "cyan", 
+	"darkorchid", "deepskyblue2", "darkgreen", 
+	"chocolate1", "darkgoldenrod1")
 	particles = list()
 	p = 0
 	
@@ -115,8 +119,10 @@ PSO_DLS = function(config){
 		p = it / config$iterations
 		
 		if(savePng()){
-			dir.create("plot", showWarnings = FALSE)
-			name = paste(config$savePngPath, "pso-dls-", it, ".png", sep="")
+			dir.create("plot/dls", showWarnings = FALSE)
+			if(it < 10) it = paste("0", it, sep="")
+			if(it < 100) it = paste("0", it, sep="")
+			name = paste(config$savePngPath, "dls/dls", it, ".png", sep="")
 			png(filename=name)
 			plot("", ylim=c(config$lower[2],config$upper[2]), xlim=c(config$lower[1],config$upper[2]))
 		}
@@ -125,7 +131,7 @@ PSO_DLS = function(config){
 		for(i in 1:length(particles)){
 			particles[[i]] = updatePos(particles[[i]], p, lbest, unitedLbest)	
 			if(savePng()){
-				points(particles[[i]]$pos[1], particles[[i]]$pos[2], ylim=c(config$lower[2],config$upper[2]), xlim=c(config$lower[1],config$upper[1]), col = c("green", "red", "blue", "cyan")[particles[[i]]$swarm], pch=c(1,4)[particles[[i]]$type])
+				points(particles[[i]]$pos[1], particles[[i]]$pos[2], ylim=c(config$lower[2],config$upper[2]), xlim=c(config$lower[1],config$upper[1]), col = colors[particles[[i]]$swarm], pch=c(1,4)[particles[[i]]$type])
 			}
 		}	
 		
@@ -137,7 +143,7 @@ PSO_DLS = function(config){
 		
 		if(savePng()){
 			for(i in 1:config$sub_swarms){
-				points(lbest[[i]]$pos[1], lbest[[i]]$pos[2], ylim=c(config$lower[2],config$upper[2]), xlim=c(config$lower[1],config$upper[1]), cex = 2, lwd = 2, col= c("green", "red", "blue", "cyan")[i], pch=c(1,4)[lbest[[i]]$type])
+				points(lbest[[i]]$pos[1], lbest[[i]]$pos[2], ylim=c(config$lower[2],config$upper[2]), xlim=c(config$lower[1],config$upper[1]), cex = 2, lwd = 2, col= colors[i], pch=c(1,4)[lbest[[i]]$type])
 			}
 			points(unitedLbest$pos[1], unitedLbest$pos[2], ylim=c(config$lower[2],config$upper[2]), xlim=c(config$lower[1],config$upper[1]), lwd = 3, col="orange", pch=23)
 			dev.off()
@@ -147,7 +153,7 @@ PSO_DLS = function(config){
 	}
 	
 	if(savePng()){
-		name = paste(config$savePngPath, "pso-dls-0.png", sep="")
+		name = paste(config$savePngPath, "dls/dls0.png", sep="")
 		png(filename=name)
 		plot(cost, type = "s")
 		dev.off()
@@ -161,24 +167,17 @@ config = c()
 config$dim = 2
 config$lower = c(-100, -100)
 config$upper = c(100, 100)
-
-# config$fun = function(x){
-	# return(20 + (x[1] ^ 2) - cos(10 * pi * x[1]) + (x[2]^2) + (10*cos(2 * pi * x[2])))
-# }
-config$fun = twopeaks_func
-config$swarm_size = 10
+config$fun = cf01
+config$swarm_size = 4
 config$c1 = 1.49445
 config$c2 = 1.49445
 config$max_vel = 2
 config$inertia = 0.9
-config$iterations = 500
+config$iterations = 1000
 
-config$sub_swarms = 3
-# config$limitLower = list(c(-50, -50), c(0, 20), c(50, -100), c(50, 50))
-# config$limitUpper = list(c(0, 0), c(50, 100), c(100, -50), c(100, 100))
+config$sub_swarms = 10
 config$limitLower = -100
 config$limitUpper = 100
-
 
 config$savePng = TRUE
 config$savePngPath = "C:/Projects/pso/pso/plot/"

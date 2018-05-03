@@ -75,6 +75,8 @@ PSO = function(config){
 		
 		if(savePng()){
 			dir.create("plot/pso", showWarnings = FALSE)
+			if(it < 10) it = paste("0", it, sep="")
+			if(it < 100) it = paste("0", it, sep="")
 			name = paste(config$savePngPath, "pso/pso", it, ".png", sep="")
 			png(filename=name)
 			plot("", ylim=c(config$lower,config$upper), xlim=c(config$lower,config$upper))
@@ -94,7 +96,7 @@ PSO = function(config){
 		}
 	}
 	if(savePng()){
-		name = paste(config$savePngPath, "pso/pso-0.png", sep="")
+		name = paste(config$savePngPath, "pso/pso0.png", sep="")
 		png(filename=name)
 		plot(cost, type = "s")
 		dev.off()
@@ -108,17 +110,13 @@ config = c()
 config$dim = 2
 config$lower = -100
 config$upper = 100
-config$fun = twopeaks_func
+config$fun = cf01
 config$swarm_size = 40
 config$c1 = 1.49445
 config$c2 = 1.49445
 config$max_vel = 2
 config$inertia = 0.9
-config$iterations = 500
-
-# config$fun = function(x){
-	# return(20 + (x[1] ^ 2) - cos(10 * pi * x[1]) + (x[2]^2) + (10*cos(2 * pi * x[2])))
-# }
+config$iterations = 1000
 
 config$savePng = TRUE
 config$savePngPath = "C:/Projects/pso/pso/plot/"
