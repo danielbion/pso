@@ -11,7 +11,7 @@ PSO_DLS = function(config){
 				temp = temp
 			),
 			type = 1,
-			swarm = swarm
+			swarm = swarm			
 		))
 	}
 
@@ -22,14 +22,14 @@ PSO_DLS = function(config){
 		for(i in 1:config$sub_swarms){
 			localBest[[i]] = globalBest
 		}
-
+		
 		for(i in 1:length(particles)){
 			swarm = particles[[i]]$swarm
 			p = acceptProbability(localBest[[swarm]]$val, particles[[i]]$best$val, particles[[i]]$best$temp)
 			r = runif(1)
 			if(p > r){
 				localBest[[swarm]] = particles[[i]]$best
-			}			
+			}
 			if(particles[[i]]$best$val < globalBest$val){
 				globalBest = particles[[i]]$best
 			}
@@ -38,15 +38,15 @@ PSO_DLS = function(config){
 		for(i in 1:length(particles)){
 			swarm = particles[[i]]$swarm
 			if(particles[[i]]$best$val == localBest[[swarm]]$val){
-				particles[[i]]$best$temp = particles[[i]]$best$temp * (1 - config$coolingRate)
+				particles[[i]]$best$temp = 1#particles[[i]]$best$temp * (1 - config$coolingRate)
 			}else{
-				particles[[i]]$best$temp = particles[[i]]$best$temp  + (particles[[i]]$best$temp * config$heatingRate)
-				if(particles[[i]]$best$temp > 1){
-					particles[[i]]$best$temp = 1
+				particles[[i]]$best$temp = particles[[i]]$best$temp  + 100#(particles[[i]]$best$temp * config$heatingRate)
+				if(particles[[i]]$best$temp > 1000){
+					particles[[i]]$best$temp = 1000
 				}
 			}
 		}
-		
+
 		pos = c()
 		for(i in 1:length(localBest)){
 			pos = rbind(pos, localBest[[i]]$pos)
@@ -81,8 +81,8 @@ PSO_DLS = function(config){
 		particle$pos = particle$pos + particle$vel	
 		
 		for(i in 1:config$dim){
-			particle$pos[i] = min(particle$pos[i], config$upper)
-			particle$pos[i] = max(particle$pos[i], config$lower)
+			particle$pos[i] = min(particle$pos[i], config$upper[i])
+			particle$pos[i] = max(particle$pos[i], config$lower[i])
 		}
 		val = config$fun(particle$pos);
 		if(val < particle$best$val){
@@ -102,10 +102,18 @@ PSO_DLS = function(config){
 		if(newFit < currentFit){
 			return (1);
 		}
-		return (exp((currentFit - newFit) * temperature))
+		return (exp(currentFit - newFit) / temperature)
+	}
+
+	savePng = function(){
+		return (config$savePng && config$dim == 2)
 	}
 
 	# Main loop
+	colors = c("gray0", "deeppink4", "green", 
+	"red", "darkblue", "cyan", 
+	"darkorchid", "deepskyblue2", "darkgreen", 
+	"chocolate1", "darkgoldenrod1")
 	particles = list()
 	p = 0
 	
@@ -114,10 +122,10 @@ PSO_DLS = function(config){
 		for(j in 1:config$swarm_size){
 			pos = c()
 			for(i in 1:config$dim){
-				pos[i] = runif(1) * (config$upper - config$lower) + config$lower
+				pos[i] = runif(1) * (config$limitUpper - config$limitLower) + config$limitLower
 			}
 			vel = rep(0, config$dim)
-			particles = push(particles, newParticle(pos, vel, swarmIndex, config$fun))
+			particles = push(particles, newParticle(pos, vel, swarmIndex, config$fun, config$initialTemp))
 		}
 	}
 	
@@ -126,26 +134,82 @@ PSO_DLS = function(config){
 	gbest = best[[1]]
 	lbest = best[[2]]
 	unitedLbest = best[[3]]
-	temp = best[[4]]
+	particles = best[[4]]
 	
 	cost = c()	
-	for(it in 1:config$iterations){		
+	for(it in 1:config$iterations){	
 		# Update p
-		p = it / config$iterations
+		p = it / config$iterations 
+		if(p > 1) p = 1
+		
+		#print (temp)
+		if(savePng()){
+			dir.create("plot/dls", showWarnings = FALSE)
+			if(it < 10) it = paste("0", it, sep="")
+			if(it < 100) it = paste("0", it, sep="")
+			name = paste(config$savePngPath, "dls/dls", it, ".png", sep="")
+			png(filename=name)
+			plot("", ylim=c(config$lower[2],config$upper[2]), xlim=c(config$lower[1],config$upper[2]))
+		}
 		
 		# Update particle positions
 		for(i in 1:length(particles)){
-			particles[[i]] = updatePos(particles[[i]], p, lbest, unitedLbest)
+			particles[[i]] = updatePos(particles[[i]], p, lbest, unitedLbest)	
+			if(savePng()){
+				points(particles[[i]]$pos[1], particles[[i]]$pos[2], ylim=c(config$lower[2],config$upper[2]), xlim=c(config$lower[1],config$upper[1]), col = colors[particles[[i]]$swarm], pch=c(1,4)[particles[[i]]$type])
+			}
 		}	
 		
 		# Update gbest, lbest, unitedLbest
-		best = calculateBest(particles, temp);	
+		best = calculateBest(particles);	
 		gbest = best[[1]]
 		lbest = best[[2]]
 		unitedLbest = best[[3]]
-		temp = best[[4]]
+		particles = best[[4]]
+		# for(i in 1:length(particles)){print(particles[[i]]$best$temp)}
+		
+		if(savePng()){
+			for(i in 1:config$sub_swarms){
+				points(lbest[[i]]$pos[1], lbest[[i]]$pos[2], ylim=c(config$lower[2],config$upper[2]), xlim=c(config$lower[1],config$upper[1]), cex = 2, lwd = 2, col= colors[i], pch=c(1,4)[lbest[[i]]$type])
+			}
+			points(unitedLbest$pos[1], unitedLbest$pos[2], ylim=c(config$lower[2],config$upper[2]), xlim=c(config$lower[1],config$upper[1]), lwd = 3, col="orange", pch=23)
+			dev.off()
+		}
 		
 		cost = c(cost,gbest$val)	
 	}
-	return (list(gbest, cost))
+	
+	if(savePng()){
+		name = paste(config$savePngPath, "dls/dls0.png", sep="")
+		png(filename=name)
+		plot(cost, type = "s")
+		dev.off()
+	}
+	return (gbest)
 }
+
+source("functions.r")
+
+config = c()
+config$dim = 2
+config$lower = c(-100, -100)
+config$upper = c(100, 100)
+config$fun = cf01
+config$swarm_size = 4
+config$c1 = 1.49445
+config$c2 = 1.49445
+config$max_vel = 2
+config$inertia = 0.9
+config$iterations = 1000
+config$coolingRate = 0.5
+config$heatingRate = 0.05
+config$initialTemp = 1000
+
+config$sub_swarms = 10
+config$limitLower = -100
+config$limitUpper = 100
+
+config$savePng = TRUE
+config$savePngPath = "C:/Projects/pso/pso/plot/"
+
+PSO_DLS(config)

@@ -2,6 +2,7 @@ path = "C:/Projects/pso/pso"
 setwd(path)
 source("pso.r")
 source("pso-dls.r")
+source("pso-dls-sa.r")
 source("functions.r")
 
 test = function(method, cfg, functions, monteCarlo){
@@ -45,6 +46,8 @@ cfg$c2 = 1.49445
 cfg$max_vel = 100
 cfg$inertia = 0.9
 cfg$iterations = 2500
+cfg$coolingRate = 0.003
+cfg$initialTemp = 1
 
 # Listing the functions to test
 functions = c("twopeaks_func", "fiveuneven_func", "equalmin_func", "decreasemin_func", "unevenmin_func", "himmelblau_func", "camelback_func", "vincent_func", "cf01", "cf02", "cf03", "cf04", "cf05", "cf06", "cf07")
