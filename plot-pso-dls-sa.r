@@ -38,11 +38,11 @@ PSO_DLS = function(config){
 		for(i in 1:length(particles)){
 			swarm = particles[[i]]$swarm
 			if(particles[[i]]$best$val == localBest[[swarm]]$val){
-				particles[[i]]$best$temp = 1#particles[[i]]$best$temp * (1 - config$coolingRate)
+				particles[[i]]$best$temp = particles[[i]]$best$temp * (1 - config$coolingRate)
 			}else{
-				particles[[i]]$best$temp = particles[[i]]$best$temp  + 100#(particles[[i]]$best$temp * config$heatingRate)
-				if(particles[[i]]$best$temp > 1000){
-					particles[[i]]$best$temp = 1000
+				particles[[i]]$best$temp = particles[[i]]$best$temp  + (particles[[i]]$best$temp * config$heatingRate)
+				if(particles[[i]]$best$temp > config$initialTemp){
+					particles[[i]]$best$temp = config$initialTemp
 				}
 			}
 		}
@@ -102,7 +102,7 @@ PSO_DLS = function(config){
 		if(newFit < currentFit){
 			return (1);
 		}
-		return (exp(currentFit - newFit) / temperature)
+		return (exp((currentFit - newFit) * temperature))
 	}
 
 	savePng = function(){
@@ -139,7 +139,7 @@ PSO_DLS = function(config){
 	cost = c()	
 	for(it in 1:config$iterations){	
 		# Update p
-		p = it / config$iterations 
+		p = it / config$iterations * 2
 		if(p > 1) p = 1
 		
 		#print (temp)
@@ -188,6 +188,8 @@ PSO_DLS = function(config){
 	return (gbest)
 }
 
+path = "C:/Projects/pso/pso"
+setwd(path)
 source("functions.r")
 
 config = c()
@@ -198,9 +200,9 @@ config$fun = cf01
 config$swarm_size = 4
 config$c1 = 1.49445
 config$c2 = 1.49445
-config$max_vel = 2
+config$max_vel = 6
 config$inertia = 0.9
-config$iterations = 1000
+config$iterations = 200
 config$coolingRate = 0.5
 config$heatingRate = 0.05
 config$initialTemp = 1000

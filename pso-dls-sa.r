@@ -1,4 +1,4 @@
-PSO_DLS = function(config){
+PSO_DLS_SA = function(config){
 
 	newParticle = function(pos, vel, swarm, fitFun, temp) {
 		return (list(
@@ -41,8 +41,8 @@ PSO_DLS = function(config){
 				particles[[i]]$best$temp = particles[[i]]$best$temp * (1 - config$coolingRate)
 			}else{
 				particles[[i]]$best$temp = particles[[i]]$best$temp  + (particles[[i]]$best$temp * config$heatingRate)
-				if(particles[[i]]$best$temp > 1){
-					particles[[i]]$best$temp = 1
+				if(particles[[i]]$best$temp > config$initialTemp){
+					particles[[i]]$best$temp = config$initialTemp
 				}
 			}
 		}
@@ -117,7 +117,7 @@ PSO_DLS = function(config){
 				pos[i] = runif(1) * (config$upper - config$lower) + config$lower
 			}
 			vel = rep(0, config$dim)
-			particles = push(particles, newParticle(pos, vel, swarmIndex, config$fun))
+			particles = push(particles, newParticle(pos, vel, swarmIndex, config$fun, config$initialTemp))
 		}
 	}
 	
@@ -126,7 +126,7 @@ PSO_DLS = function(config){
 	gbest = best[[1]]
 	lbest = best[[2]]
 	unitedLbest = best[[3]]
-	temp = best[[4]]
+	particles = best[[4]]
 	
 	cost = c()	
 	for(it in 1:config$iterations){		
@@ -139,11 +139,11 @@ PSO_DLS = function(config){
 		}	
 		
 		# Update gbest, lbest, unitedLbest
-		best = calculateBest(particles, temp);	
+		best = calculateBest(particles);	
 		gbest = best[[1]]
 		lbest = best[[2]]
 		unitedLbest = best[[3]]
-		temp = best[[4]]
+		particles = best[[4]]
 		
 		cost = c(cost,gbest$val)	
 	}

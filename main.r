@@ -36,6 +36,8 @@ test = function(method, cfg, functions, monteCarlo){
 	return (results)
 }
 
+
+## Method configuration
 cfg = c()
 cfg$dim = 10
 cfg$lower = -100
@@ -46,8 +48,6 @@ cfg$c2 = 1.49445
 cfg$max_vel = 100
 cfg$inertia = 0.9
 cfg$iterations = 2500
-cfg$coolingRate = 0.003
-cfg$initialTemp = 1
 
 # Listing the functions to test
 functions = c("twopeaks_func", "fiveuneven_func", "equalmin_func", "decreasemin_func", "unevenmin_func", "himmelblau_func", "camelback_func", "vincent_func", "cf01", "cf02", "cf03", "cf04", "cf05", "cf06", "cf07")
@@ -56,30 +56,55 @@ functions = c("twopeaks_func", "fiveuneven_func", "equalmin_func", "decreasemin_
 monteCarlo = 30
 dir.create("results", showWarnings = FALSE)
 
-# Test standard PSO
-PSO_result = test(PSO, cfg, functions, monteCarlo)
-# Save the results for PSO, use: PSO_result = readRDS("results/pso.rds") to read later
-saveRDS(PSO_result, "results/pso.rds")
 
-# Test PSO DLS
+
+########################### Standard PSO ###########################
+# uncomment to generate results
+
+#PSO_result = test(PSO, cfg, functions, monteCarlo)
+#saveRDS(PSO_result, "results/pso.rds")
+
+# uncomment to read results
+PSO_result = readRDS("results/pso.rds")
+
+
+############################ PSO DLS ###########################
 cfg$swarm_size = 4
 cfg$sub_swarms = 10
-PSO_DLS_result = test(PSO_DLS, cfg, functions, monteCarlo)
-# Save the results for PSO-DLS, use: PSO_DLS_result = readRDS("results/pso-dls.rds") to read later
-saveRDS(PSO_DLS_result, "results/pso-dls.rds") 
+
+# uncomment to generate results
+#PSO_DLS_result = test(PSO_DLS, cfg, functions, monteCarlo)
+#saveRDS(PSO_DLS_result, "results/pso-dls.rds") 
+
+# uncomment to read results
+PSO_DLS_result = readRDS("results/pso-dls.rds")
+
+
+########################### PSO DLS SA ###########################
+cfg$coolingRate = 0.5
+cfg$heatingRate = 0.05
+cfg$initialTemp = 1000
+
+#PSO_DLS_SA_result = test(PSO_DLS_SA, cfg, functions, monteCarlo)
+#saveRDS(PSO_DLS_SA_result, "results/pso-dls-sa.rds") 
+
+# uncomment to read results
+PSO_DLS_SA_result = readRDS("results/pso-dls-sa.rds")
+
 
 
 # Save the cost history (convergence) for each function
 for(i in 1:length(functions)){	
-	minY = min(min(PSO_result[[i]]$pso_mean_cost), min(PSO_DLS_result[[i]]$pso_mean_cost))
-	maxY = max(max(PSO_result[[i]]$pso_mean_cost), max(PSO_DLS_result[[i]]$pso_mean_cost))
+	minY = min(min(PSO_result[[i]]$pso_mean_cost), min(PSO_DLS_result[[i]]$pso_mean_cost), min(PSO_DLS_SA_result[[i]]$pso_mean_cost))
+	maxY = max(max(PSO_result[[i]]$pso_mean_cost), max(PSO_DLS_result[[i]]$pso_mean_cost), max(PSO_DLS_SA_result[[i]]$pso_mean_cost))
 		
 	name = paste("results/function-", i,".png", sep="")
 	png(filename=name)
 	plot("", ylim = c(minY, maxY), xlim = c(0, cfg$iterations),xlab="Iteration",ylab="")
-	legend("topright", legend = c("PSO", "PSO-DLS"), fill=c("blue", "red"), bty="n")
+	legend("topright", legend = c("PSO", "PSO-DLS", "PSO-DLS-SA"), fill=c("blue", "red", "forestgreen"), bty="n")
 	lines(PSO_result[[i]]$pso_mean_cost, col = "blue")
 	lines(PSO_DLS_result[[i]]$pso_mean_cost, col = "red")
+	lines(PSO_DLS_SA_result[[i]]$pso_mean_cost, col = "forestgreen")
 	dev.off()
 }
 
@@ -99,11 +124,15 @@ functionsResult = list()
 for(i in 1:length(functions)){
 	pso = PSO_result[[i]]$pso_gbest
 	pso_dls = PSO_DLS_result[[i]]$pso_gbest
+	pso_dls_sa = PSO_DLS_SA_result[[i]]$pso_gbest
 	
 	functionsResult[[i]] = list()
-	functionsResult[[i]]$tests = wilcox.test(pso_dls, pso, paired = TRUE, alternative = "less", conf.level = 0.95)
+	functionsResult[[i]]$tests1 = wilcox.test(pso_dls, pso, paired = TRUE, alternative = "less", conf.level = 0.95)
+	functionsResult[[i]]$tests2 = wilcox.test(pso_dls_sa, pso, paired = TRUE, alternative = "less", conf.level = 0.95)
+	functionsResult[[i]]$tests3 = wilcox.test(pso_dls_sa, pso_dls, paired = TRUE, alternative = "less", conf.level = 0.95)
 	functionsResult[[i]]$pso = getMetrics(pso)
 	functionsResult[[i]]$pso_dls = getMetrics(pso_dls)
+	functionsResult[[i]]$pso_dls_sa = getMetrics(pso_dls_sa)
 	
 	saveRDS(functionsResult, "results/results.rds") 
 }
