@@ -17,7 +17,7 @@ PSO_DLS_SA = function(config){
 
 	calculateBest = function(particles) {
 		globalBest = particles[[1]]$best
-		globalBest$val = 100000
+		globalBest$val = 10000000
 		localBest = list()
 		for(i in 1:config$sub_swarms){
 			localBest[[i]] = globalBest
@@ -99,10 +99,13 @@ PSO_DLS_SA = function(config){
 	}
 
 	acceptProbability = function(currentFit, newFit, temperature){
-		if(newFit < currentFit){
-			return (1);
+		if(newFit == currentFit) {
+			return (0)
 		}
-		return (exp((currentFit - newFit) * temperature))
+		if(newFit < currentFit){
+			return (1)
+		}
+		return (exp((currentFit - newFit) / temperature))
 	}
 
 	# Main loop
