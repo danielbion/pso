@@ -85,11 +85,11 @@ cfg$coolingRate = 0.05
 cfg$heatingRate = 0.01
 cfg$initialTemp = 1000
 
-PSO_DLS_SA_result = test(PSO_DLS_SA, cfg, functions, monteCarlo)
-saveRDS(PSO_DLS_SA_result, "results/pso-dls-sa.rds") 
+#PSO_DLS_SA_result = test(PSO_DLS_SA, cfg, functions, monteCarlo)
+#saveRDS(PSO_DLS_SA_result, "results/pso-dls-sa.rds") 
 
 # uncomment to read results
-#PSO_DLS_SA_result = readRDS("results/pso-dls-sa.rds")
+PSO_DLS_SA_result = readRDS("results/pso-dls-sa.rds")
 
 
 

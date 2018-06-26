@@ -22,16 +22,28 @@ PSO_DLS = function(config){
 		for(i in 1:config$sub_swarms){
 			localBest[[i]] = globalBest
 		}
-		
 		for(i in 1:length(particles)){
 			swarm = particles[[i]]$swarm
-			p = acceptProbability(localBest[[swarm]]$val, particles[[i]]$best$val, particles[[i]]$best$temp)
-			r = runif(1)
-			if(p > r){
+			if(particles[[i]]$best$val < localBest[[swarm]]$val){
 				localBest[[swarm]] = particles[[i]]$best
 			}
 			if(particles[[i]]$best$val < globalBest$val){
 				globalBest = particles[[i]]$best
+			}
+		}
+
+		for(j in 1:length(localBest)){
+			if(localBest[[j]]$temp < config$initialTemp / 10){
+				for(i in 1:length(particles)){
+					swarm = particles[[i]]$swarm
+					if(swarm == j){
+						p = acceptProbability(localBest[[j]]$val, particles[[i]]$best$val, particles[[i]]$best$temp)
+						r = runif(1)
+						if(p > r){
+							localBest[[j]] = particles[[i]]$best
+						}	
+					}
+				}
 			}
 		}
 
@@ -200,14 +212,14 @@ config$dim = 2
 config$lower = c(-100, -100)
 config$upper = c(100, 100)
 config$fun = cf01
-config$swarm_size = 4
+config$swarm_size = 10
 config$c1 = 1.49445
 config$c2 = 1.49445
 config$max_vel = 6
 config$inertia = 0.9
-config$iterations = 200
+config$iterations = 500
 config$coolingRate = 0.05
-config$heatingRate = 0.01
+config$heatingRate = 0.005
 config$initialTemp = 1000
 
 config$sub_swarms = 10

@@ -22,16 +22,28 @@ PSO_DLS_SA = function(config){
 		for(i in 1:config$sub_swarms){
 			localBest[[i]] = globalBest
 		}
-
 		for(i in 1:length(particles)){
 			swarm = particles[[i]]$swarm
-			p = acceptProbability(localBest[[swarm]]$val, particles[[i]]$best$val, particles[[i]]$best$temp)
-			r = runif(1)
-			if(p > r){
+			if(particles[[i]]$best$val < localBest[[swarm]]$val){
 				localBest[[swarm]] = particles[[i]]$best
-			}			
+			}
 			if(particles[[i]]$best$val < globalBest$val){
 				globalBest = particles[[i]]$best
+			}
+		}
+
+		for(j in 1:length(localBest)){
+			if(localBest[[j]]$temp < config$initialTemp / 100){
+				for(i in 1:length(particles)){
+					swarm = particles[[i]]$swarm
+					if(swarm == j){
+						p = acceptProbability(localBest[[j]]$val, particles[[i]]$best$val, particles[[i]]$best$temp)
+						r = runif(1)
+						if(p > r){
+							localBest[[j]] = particles[[i]]$best
+						}	
+					}
+				}
 			}
 		}
 
